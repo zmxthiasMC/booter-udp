@@ -44,7 +44,7 @@ if (isMainThread) {
             clearInterval(interval);
             if (botId === numBots - 1) {
                 udpClient.close();
-                console.log("Prueba de estrés completada.");
+                console.log("UDP Enviado con éxito y expirado");
             }
         }, duration * 1000);
     }
