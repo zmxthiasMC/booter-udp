@@ -9,13 +9,18 @@ const numBots = parseInt(args[2], 10) || 500; // Número de bots
 const pps = parseInt(args[3], 10) || 1000; // Paquetes por segundo por bot
 const duration = parseInt(args[4], 10) || 60; // Duración en segundos
 
+function getRandomIp(){
+    return `${Math.floor(Math.random() * 256)}.${Math.floor(Math.random() * 256)}.${Math.floor(Math.random() * 256)}.${Math.floor(Math.random() * 256)}`;
+}
+
 function sendPacket(botId, packetId){
-    const message = Buffer.from(`Bot ${botId} - Paquete de prueba ${packetId}`);
+    const spoofedIp = getRandomIp();
+    const message = Buffer.from(`Bot ${botId} - Paquete de prueba ${packetId} desde ${spoofedIp}`);
     client.send(message, 0, message.length, serverPort, serverAddress, (err) => {
         if (err){
             console.error(`Bot ${botId}: Error al enviar paquete ${packetId} - ${err.message}`);
         } else {
-            console.log(`Bot ${botId}: Enviando paquete ${packetId} a ${serverAddress}:${serverPort}`);
+            console.log(`Bot ${botId}: Enviando paquete ${packetId} desde ${spoofedIp} a ${serverAddress}:${serverPort}`);
         }
     });
 }
