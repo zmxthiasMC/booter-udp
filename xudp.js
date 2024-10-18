@@ -98,4 +98,4 @@ if (isMainThread) {
     }
 
     setInterval(checkServerStatus, 10000); // Verifica el estado del servidor cada 10 segundos
-            }
+}
