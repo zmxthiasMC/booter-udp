@@ -5,10 +5,10 @@ if (isMainThread) {
     const args = process.argv.slice(2);
     const serverAddress = args[0] || '127.0.0.1'; // IP del servidor
     const serverPort = parseInt(args[1], 10) || 19132; // Puerto del servidor
-    const numBots = parseInt(args[2], 10) || 1000000; // Número de bots
-    const pps = parseInt(args[3], 10) || 1000000; // Paquetes por segundo por bot
-    const duration = parseInt(args[4], 10) || 1000000; // Duración en segundos
-    const numThreads = parseInt(args[5], 10) || 1000000; // Número de hilos
+    const numBots = parseInt(args[2], 10) || 10000; // Número de bots
+    const pps = parseInt(args[3], 10) || 10000; // Paquetes por segundo por bot
+    const duration = parseInt(args[4], 10) || 900; // Duración en segundos (15 minutos)
+    const numThreads = 64; // Número de hilos concurrentes
 
     for (let i = 0; i < numThreads; i++) {
         new Worker(__filename, { workerData: { serverAddress, serverPort, numBots, pps, duration } });
